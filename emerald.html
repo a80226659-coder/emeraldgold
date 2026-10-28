@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>learnwtf - AI Social & Knowledge Engine</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg-dark: #0a0405;
+      --card-bg: #14080b;
+      --card-border: #2e1017;
+      --red-primary: #8B0000;
+      --red-accent: #E60026;
+      --red-glow: rgba(230, 0, 38, 0.35);
+      --gold-accent: #D4AF37;
+      --text-main: #f3f3f3;
+      --text-muted: #a39296;
+      --glass-panel: rgba(20, 8, 11, 0.85);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--red-accent); }
+
+    /* SSO Modal Overlay */
+    .login-overlay {
+      position: fixed; inset: 0; background: rgba(5, 2, 3, 0.92); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+      transition: opacity 0.4s ease, visibility 0.4s;
+    }
+    .login-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .login-box {
+      background: var(--card-bg); border: 1px solid var(--red-primary); border-radius: 16px;
+      padding: 40px; width: 90%; max-width: 440px; text-align: center;
+      box-shadow: 0 0 50px rgba(139, 0, 0, 0.4); position: relative;
+    }
+    .brand-title { font-family: 'Cinzel', serif; font-size: 2.8rem; font-weight: 800; color: var(--red-accent); text-shadow: 0 0 15px var(--red-glow); letter-spacing: 2px; }
+    .slogan { font-size: 0.9rem; color: var(--gold-accent); margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .btn-sso {
+      width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--card-border);
+      background: #1c0b0f; color: var(--text-main); font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.3s ease;
+    }
+    .btn-sso:hover { border-color: var(--red-accent); background: var(--red-primary); box-shadow: 0 0 15px var(--red-glow); }
+
+    /* App Header */
+    header {
+      background: var(--glass-panel); border-bottom: 1px solid var(--card-border);
+      padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
+    }
+    .nav-tabs { display: flex; gap: 8px; background: #080304; padding: 5px; border-radius: 10px; border: 1px solid var(--card-border); }
+    .nav-btn {
+      padding: 10px 18px; border: none; background: transparent; color: var(--text-muted);
+      border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .nav-btn.active { background: var(--red-primary); color: #fff; box-shadow: 0 0 12px var(--red-glow); }
+    .nav-btn:hover:not(.active) { color: var(--text-main); background: rgba(230, 0, 38, 0.1); }
+
+    /* Layout & Cards */
+    main { padding: 30px; max-width: 1400px; margin: 0 auto; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
+      padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .card-title { font-size: 1.2rem; font-weight: 700; color: var(--gold-accent); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--red-primary); border-radius: 12px; padding: 30px; text-align: center;
+      background: rgba(139, 0, 0, 0.05); cursor: pointer; transition: 0.3s ease; position: relative;
+    }
+    .drop-zone:hover { background: rgba(230, 0, 38, 0.15); border-color: var(--red-accent); box-shadow: 0 0 20px var(--red-glow); }
+    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    /* Buttons */
+    .btn-accent {
+      background: linear-gradient(135deg, var(--red-primary), var(--red-accent)); color: #fff;
+      border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .btn-accent:hover { box-shadow: 0 0 15px var(--red-glow); transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent; border: 1px solid var(--card-border); color: var(--text-main);
+      padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .btn-outline:hover { border-color: var(--red-accent); color: var(--red-accent); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+
+    /* Chatbot Styles */
+    .chat-box { height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 8px; margin-bottom: 15px; }
+    .chat-msg { padding: 12px 16px; border-radius: 10px; max-width: 80%; font-size: 0.95rem; line-height: 1.4; }
+    .chat-msg.user { background: var(--red-primary); color: #fff; align-self: flex-end; }
+    .chat-msg.bot { background: #1f0d12; border: 1px solid var(--card-border); color: var(--text-main); align-self: flex-start; }
+
+    /* Table & Switch */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--card-border); font-size: 0.9rem; }
+    th { color: var(--gold-accent); font-weight: 600; }
+
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; inset: 0; background-color: #2a1217; transition: .3s; border-radius: 22px; border: 1px solid var(--card-border); }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: var(--text-muted); transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--red-accent); }
+    input:checked + .slider:before { transform: translateX(22px); background-color: #fff; }
+
+    /* Action Modal for Journal Options */
+    .journal-modal {
+      position: fixed; inset: 0; background: rgba(5, 2, 3, 0.9); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center; z-index: 1001;
+    }
+    .journal-modal.hidden { display: none; }
+
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      header { flex-direction: column; gap: 15px; }
+      .nav-tabs { width: 100%; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SSO Authentication Overlay -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+      <div class="brand-title">learnwtf</div>
+      <div class="slogan">Content & Knowledge Suite</div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 25px;">Sign in via Microsoft 365 or Google to connect OneDrive and social channels.</p>
+      <button class="btn-sso" onclick="loginWithMicrosoft()"><i data-lucide="cloud"></i> Sign in with Microsoft 365</button>
+      <button class="btn-sso" onclick="completeDemoLogin('Google Workspace')"><i data-lucide="mail"></i> Sign in with Google Workspace</button>
+    </div>
+  </div>
+
+  <!-- Journal File Action Choice Modal -->
+  <div id="journalModal" class="journal-modal hidden">
+    <div class="card" style="width: 90%; max-width: 550px; border-color: var(--gold-accent); position: relative;">
+      <div class="card-title" style="justify-content: space-between;">
+        <span><i data-lucide="sparkles"></i> Journal Page Options</span>
+        <button onclick="closeJournalModal()" class="btn-outline" style="padding: 2px 6px;"><i data-lucide="x"></i></button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+        File: <strong id="selectedJournalName" style="color: var(--gold-accent);">Journal_Entry.png</strong><br>
+        Choose what AI actions you want to apply to this page:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+        <button class="btn-sso" style="text-align: left; justify-content: flex-start;" onclick="executeJournalAction('tasks')">
+          <i data-lucide="check-square" style="color: var(--red-accent);"></i>
+          <div>
+            <strong>Extract Actionable Tasks</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Parses to-do items from handwritten/typed notes into Tab 4.</div>
+          </div>
+        </button>
+
+        <button class="btn-sso" style="text-align: left; justify-content: flex-start;" onclick="executeJournalAction('graphic')">
+          <i data-lucide="image" style="color: var(--gold-accent);"></i>
+          <div>
+            <strong>Generate Social Media Graphics</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Creates branded quote graphics & post visuals from key highlights.</div>
+          </div>
+        </button>
+
+        <button class="btn-sso" style="text-align: left; justify-content: flex-start;" onclick="executeJournalAction('both')">
+          <i data-lucide="zap" style="color: var(--red-primary);"></i>
+          <div>
+            <strong>Do Both (Tasks + Graphic)</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Extracts all tasks AND builds social graphics simultaneously.</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Preview Box for Graphics Generation -->
+      <div id="graphicPreviewArea" style="display: none; background: #080304; padding: 15px; border-radius: 8px; border: 1px solid var(--card-border); margin-top: 15px;">
+        <div style="font-size: 0.85rem; color: var(--gold-accent); margin-bottom: 10px; font-weight: 700;">Generated Quote Graphic:</div>
+        <div id="graphicCanvas" style="background: linear-gradient(135deg, #8B0000, #14080b); padding: 25px; border-radius: 8px; text-align: center; border: 1px solid var(--gold-accent);">
+          <p id="graphicQuoteText" style="font-family: 'Cinzel', serif; font-size: 1.1rem; color: #fff; font-style: italic; margin-bottom: 10px;">"Turn friction into momentum."</p>
+          <span style="font-size: 0.75rem; color: var(--gold-accent); font-weight: 600;">@learnwtf</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Header -->
+  <header>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <div class="brand-title" style="font-size: 1.8rem;">learnwtf</div>
+      <span id="userBadge" class="btn-outline" style="font-size: 0.75rem; border-color: var(--gold-accent); color: var(--gold-accent); display: none;">Connected</span>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-btn active" onclick="switchTab('highlights', event)"><i data-lucide="scissors"></i> Clips & Publish</button>
+      <button class="nav-btn" onclick="switchTab('portal', event)"><i data-lucide="folder-kanban"></i> Knowledge Vault</button>
+      <button class="nav-btn" onclick="switchTab('trends', event)"><i data-lucide="trending-up"></i> Trends & Ideas</button>
+      <button class="nav-btn" onclick="switchTab('tasks', event)"><i data-lucide="check-square"></i> Tasks</button>
+    </nav>
+    <button class="btn-outline" onclick="logout()"><i data-lucide="log-out"></i> Logout</button>
+  </header>
+
+  <main>
+    <!-- TAB 1: HIGHLIGHTS & SOCIAL PUBLISHER -->
+    <section id="highlights" class="tab-content active">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><i data-lucide="upload-cloud"></i> Video Source Ingestion</div>
+          <div class="drop-zone">
+            <input type="file" accept="video/*" onchange="handleVideoUpload(this.files)">
+            <i data-lucide="film" style="width: 40px; height: 40px; color: var(--red-accent); margin-bottom: 10px;"></i>
+            <p style="font-weight: 600;">Drag & Drop video file here or click to browse</p>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Supports MP4, MOV, AVI up to 2GB</p>
+          </div>
+          <button class="btn-outline" onclick="syncOneDriveVideo()" style="width: 100%; margin-top: 15px;"><i data-lucide="cloud-download"></i> Fetch from Connected OneDrive</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i data-lucide="share-2"></i> Linked Accounts</div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #080304; padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+              <span style="display: flex; align-items: center; gap: 10px;"><i data-lucide="linkedin" style="color: #0a66c2;"></i> LinkedIn</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #080304; padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+              <span style="display: flex; align-items: center; gap: 10px;"><i data-lucide="instagram" style="color: #e1306c;"></i> Instagram Reels</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #080304; padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+              <span style="display: flex; align-items: center; gap: 10px;"><i data-lucide="youtube" style="color: #ff0000;"></i> YouTube Shorts</span>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i data-lucide="film"></i> Extracted 15–30s Viral Clips</div>
+        <div id="clipsGrid" class="grid-3">
+          <div style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1; text-align: center; padding: 30px; border: 1px dashed var(--card-border); border-radius: 8px;">
+            No video processed yet. Upload a video above or sync OneDrive to view extracted 15-30s clips.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: KNOWLEDGE VAULT & JOURNAL ANALYZER -->
+    <section id="portal" class="tab-content">
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title"><i data-lucide="file-plus"></i> Upload Documents & Journal Pages</div>
+            <div class="drop-zone">
+              <input type="file" multiple onchange="handleDocUpload(this.files)">
+              <i data-lucide="book-open" style="width: 36px; height: 36px; color: var(--gold-accent); margin-bottom: 8px;"></i>
+              <p style="font-weight: 600;">Drag & Drop documents, journal pages, or images</p>
+              <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Journal scans will trigger AI task extraction & quote graphic generation</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="database"></i> Document Repository</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Access Permission</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="fileTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title"><i data-lucide="bot"></i> Admin Chatbot</div>
+            <div class="chat-box" id="chatBox">
+              <div class="chat-msg bot">Hello! I am your Vault AI. Ask me any question regarding your public/private uploaded documents or analyzed journal entries.</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="chatInput" placeholder="Ask a question about your files..." style="flex:1; background: #080304; border: 1px solid var(--card-border); color: #fff; padding: 10px; border-radius: 8px;" onkeypress="if(event.key==='Enter') sendChatMessage()">
+              <button class="btn-accent" onclick="sendChatMessage()"><i data-lucide="send"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: TRENDS & CONTENT IDEAS -->
+    <section id="trends" class="tab-content">
+      <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+          <span><i data-lucide="sparkles"></i> Weekly Niche Trend Briefing</span>
+          <button class="btn-accent" onclick="refreshTrends()"><i data-lucide="refresh-cw"></i> Refresh Ideas</button>
+        </div>
+        <div class="grid-3" id="trendsGrid">
+          <div class="card" style="background: #0d0507;">
+            <div style="color: #0a66c2; font-weight: 700; margin-bottom: 10px;"><i data-lucide="linkedin"></i> LinkedIn Strategy</div>
+            <h4 style="margin-bottom: 8px;">"3 Costly Industry Myths"</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Break down 3 common misconceptions in your field with slide graphics.</p>
+          </div>
+          <div class="card" style="background: #0d0507;">
+            <div style="color: #e1306c; font-weight: 700; margin-bottom: 10px;"><i data-lucide="instagram"></i> Instagram Reels</div>
+            <h4 style="margin-bottom: 8px;">"Behind The Scenes Execution"</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Fast-paced 15s clip showcasing your daily workflow.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: TASKS -->
+    <section id="tasks" class="tab-content">
+      <div class="card">
+        <div class="card-title"><i data-lucide="check-square"></i> Cross-Device To-Do List</div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <input type="text" id="taskInput" placeholder="Add a new task..." style="flex: 1; background: #080304; border: 1px solid var(--card-border); color: #fff; padding: 10px; border-radius: 8px;" onkeypress="if(event.key==='Enter') addTask()">
+          <button class="btn-accent" onclick="addTask()"><i data-lucide="plus"></i> Add Task</button>
+        </div>
+        <div id="taskList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* =========================================================================
+       INPUT YOUR API KEYS & CREDENTIALS HERE AT THE TOP OF THE SCRIPT
+       ========================================================================= */
+    const CONFIG_KEYS = {
+      SUPABASE_URL: "YOUR_SUPABASE_PROJECT_URL",
+      SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY",
+      OPENAI_API_KEY: "YOUR_OPENAI_API_KEY",
+      AZURE_CLIENT_ID: "YOUR_AZURE_CLIENT_ID",
+      AZURE_TENANT_ID: "YOUR_AZURE_TENANT_ID"
+    };
+
+    let supabaseClient = null;
+    if (CONFIG_KEYS.SUPABASE_URL !== "YOUR_SUPABASE_PROJECT_URL" && window.supabase) {
+      supabaseClient = window.supabase.createClient(CONFIG_KEYS.SUPABASE_URL, CONFIG_KEYS.SUPABASE_ANON_KEY);
+    }
+
+    // App State
+    let fileVault = [
+      { id: 1, name: 'Journal_Page_Oct28.png', isJournal: true, isPublic: false, content: 'Handwritten Journal Entry: Need to schedule podcast recording and record 3 Reels.' }
+    ];
+    let tasks = [
+      { id: 1, text: 'Review extracted 15s Instagram Reel clip', completed: false }
+    ];
+    let activeJournalFile = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      renderVaultTable();
+      renderTasks();
+    });
+
+    function loginWithMicrosoft() {
+      completeDemoLogin("Microsoft 365");
+    }
+
+    function completeDemoLogin(provider) {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('userBadge').innerText = provider + " Connected";
+      document.getElementById('userBadge').style.display = 'inline-flex';
+    }
+
+    function logout() {
+      document.getElementById('loginOverlay').classList.remove('hidden');
+    }
+
+    function switchTab(tabId, event) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Journal Analysis Trigger
+    function openJournalOptions(fileId) {
+      const file = fileVault.find(f => f.id === fileId);
+      if (!file) return;
+      activeJournalFile = file;
+      document.getElementById('selectedJournalName').innerText = file.name;
+      document.getElementById('graphicPreviewArea').style.display = 'none';
+      document.getElementById('journalModal').classList.remove('hidden');
+    }
+
+    function closeJournalModal() {
+      document.getElementById('journalModal').classList.add('hidden');
+    }
+
+    function executeJournalAction(actionType) {
+      if (!activeJournalFile) return;
+
+      if (actionType === 'tasks' || actionType === 'both') {
+        tasks.push({ id: Date.now(), text: `[From Journal]: Schedule podcast recording session`, completed: false });
+        tasks.push({ id: Date.now() + 1, text: `[From Journal]: Record 3 Reels on weekly trend themes`, completed: false });
+        renderTasks();
+      }
+
+      if (actionType === 'graphic' || actionType === 'both') {
+        document.getElementById('graphicPreviewArea').style.display = 'block';
+        document.getElementById('graphicQuoteText').innerText = `"Turn journal insights into immediate execution."`;
+      }
+
+      if (actionType === 'tasks') {
+        alert("Tasks successfully extracted and added to your Tasks tab!");
+        closeJournalModal();
+      }
+    }
+
+    // File Upload Handlers
+    async function handleDocUpload(files) {
+      Array.from(files).forEach((file, idx) => {
+        const isJournal = file.name.toLowerCase().includes('journal') || file.type.includes('image');
+        const autoName = "AI_Renamed_" + file.name.replace(/[^a-zA-Z0-9.]/g, "_");
+        const newFile = {
+          id: Date.now() + idx,
+          name: autoName,
+          isJournal: isJournal,
+          isPublic: false,
+          content: 'File content: ' + file.name
+        };
+        fileVault.push(newFile);
+
+        if (isJournal) {
+          setTimeout(() => openJournalOptions(newFile.id), 400);
+        }
+      });
+      renderVaultTable();
+    }
+
+    function renderVaultTable() {
+      const tbody = document.getElementById('fileTableBody');
+      tbody.innerHTML = '';
+      fileVault.forEach(file => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <i data-lucide="${file.isJournal ? 'book-open' : 'file-text'}" style="width:14px; margin-right:6px; color:var(--gold-accent);"></i>
+            ${file.name}
+          </td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" ${file.isPublic ? 'checked' : ''} onchange="togglePermission(${file.id})">
+              <span class="slider"></span>
+            </label>
+            <span style="font-size:0.75rem; margin-left:8px;">${file.isPublic ? 'Public' : 'Private'}</span>
+          </td>
+          <td>
+            ${file.isJournal ? `<button class="btn-accent" style="padding: 2px 8px; font-size: 0.75rem;" onclick="openJournalOptions(${file.id})">Analyze Journal</button>` : `<button class="btn-outline" style="padding: 2px 6px;" onclick="alert('${file.content}')">Preview</button>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function togglePermission(id) {
+      const file = fileVault.find(f => f.id === id);
+      if (file) { file.isPublic = !file.isPublic; renderVaultTable(); }
+    }
+
+    // Chatbot Functionality
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML += `<div class="chat-msg user">${text}</div>`;
+      input.value = '';
+
+      setTimeout(() => {
+        chatBox.innerHTML += `<div class="chat-msg bot">[Vault AI]: Analyzed query against your ${fileVault.length} uploaded files and journal notes.</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 500);
+    }
+
+    // Trends & Ideas Refresh
+    function refreshTrends() {
+      const grid = document.getElementById('trendsGrid');
+      grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1;">Fetching new weekly trend ideas...</p>';
+      setTimeout(() => {
+        grid.innerHTML = `
+          <div class="card" style="background: #0d0507;">
+            <div style="color: #0a66c2; font-weight: 700; margin-bottom: 10px;"><i data-lucide="linkedin"></i> LinkedIn Strategy</div>
+            <h4 style="margin-bottom: 8px;">"Case Study: 0 to 100k"</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Share raw metrics and lessons from a recent project launch.</p>
+          </div>
+          <div class="card" style="background: #0d0507;">
+            <div style="color: #e1306c; font-weight: 700; margin-bottom: 10px;"><i data-lucide="instagram"></i> Instagram Reels</div>
+            <h4 style="margin-bottom: 8px;">"Quick Hack Breakdown"</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">A 20-second tutorial answering a frequent client question.</p>
+          </div>
+        `;
+        lucide.createIcons();
+      }, 700);
+    }
+
+    // Task Management
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '';
+      tasks.forEach(task => {
+        list.innerHTML += `
+          <div style="display:flex; justify-content:space-between; background:#080304; padding:12px; border-radius:8px; border:1px solid var(--card-border);">
+            <span>${task.text}</span>
+            <button class="btn-outline" style="padding:2px 6px;" onclick="deleteTask(${task.id})"><i data-lucide="trash-2" style="width:14px;"></i></button>
+          </div>
+        `;
+      });
+      lucide.createIcons();
+    }
+
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      if (!input.value.trim()) return;
+      tasks.push({ id: Date.now(), text: input.value.trim() });
+      input.value = '';
+      renderTasks();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      renderTasks();
+    }
+  </script>
+</body>
+</html>
