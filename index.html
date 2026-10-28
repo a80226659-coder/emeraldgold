@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emerald & Gold Command Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase Compat Libraries for Silent Background Sync -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;600&display=swap');
+    body { font-family: 'Montserrat', sans-serif; background-color: #031e16; color: #e2e8f0; }
+    h1, h2, h3, .gold-font { font-family: 'Cinzel', serif; }
+    .gold-gradient { background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); }
+    .gold-border { border-color: #d4af37; }
+    .gold-text { color: #d4af37; }
+    .bg-emerald-card { background: rgba(6, 44, 33, 0.85); backdrop-filter: blur(8px); }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+
+  <!-- PASSCODE LOCK OVERLAY -->
+  <div id="lockOverlay" class="fixed inset-0 bg-[#02130e] z-50 flex items-center justify-center p-4">
+    <div class="bg-emerald-card border-2 border-[#d4af37] p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
+      <div class="w-16 h-16 gold-gradient rounded-full mx-auto mb-4 flex items-center justify-center text-[#031e16] font-bold text-2xl">🔒</div>
+      <h2 class="text-2xl font-bold gold-text mb-2">Access Command Center</h2>
+      <p class="text-sm text-emerald-200/70 mb-6">Enter your security passcode to unlock</p>
+      <input type="password" id="passcodeInput" class="w-full bg-[#031e16] border border-[#d4af37]/50 rounded-lg px-4 py-3 text-center text-xl tracking-widest text-gold-400 focus:outline-none focus:border-[#d4af37] mb-4" placeholder="••••">
+      <button onclick="unlockApp()" class="w-full gold-gradient text-[#031e16] font-bold py-3 rounded-lg hover:opacity-90 transition">Unlock Workspace</button>
+      <p id="lockError" class="text-red-400 text-sm mt-3 hidden">Invalid Passcode</p>
+    </div>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
+  <div id="appWorkspace" class="hidden max-w-7xl mx-auto px-4 pt-6">
+    <!-- HEADER -->
+    <header class="flex flex-col md:flex-row justify-between items-center bg-emerald-card border border-[#d4af37]/40 rounded-2xl p-6 mb-8 shadow-xl">
+      <div>
+        <h1 class="text-3xl font-bold gold-text">Emerald & Gold Command Center</h1>
+        <p class="text-xs text-emerald-200/60 mt-1">Unified Multi-Device Operational Dashboard</p>
+      </div>
+      <button onclick="lockApp()" class="mt-4 md:mt-0 px-4 py-2 border border-[#d4af37]/50 text-gold-400 rounded-lg hover:bg-[#d4af37]/10 transition text-sm">Lock Dashboard</button>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="flex flex-wrap gap-2 mb-8 border-b border-[#d4af37]/30 pb-4">
+      <button onclick="switchTab('affirmations')" id="tab-affirmations" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold border border-[#d4af37] bg-[#d4af37] text-[#031e16]">18 Daily Affirmations</button>
+      <button onclick="switchTab('tasks')" id="tab-tasks" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold border border-[#d4af37]/30 text-emerald-200/80 hover:border-[#d4af37]">Domain Tasks</button>
+      <button onclick="switchTab('speech')" id="tab-speech" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold border border-[#d4af37]/30 text-emerald-200/80 hover:border-[#d4af37]">Speech Timer</button>
+      <button onclick="switchTab('social')" id="tab-social" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold border border-[#d4af37]/30 text-emerald-200/80 hover:border-[#d4af37]">Social Media Engine</button>
+      <button onclick="switchTab('manhwa')" id="tab-manhwa" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold border border-[#d4af37]/30 text-emerald-200/80 hover:border-[#d4af37]">Manhwa Vault</button>
+      <button onclick="switchTab('digital')" id="tab-digital" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold border border-[#d4af37]/30 text-emerald-200/80 hover:border-[#d4af37]">Digital Products</button>
+      <button onclick="switchTab('healthcare')" id="tab-healthcare" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold border border-[#d4af37]/30 text-emerald-200/80 hover:border-[#d4af37]">4-Week Healthcare Roadmap</button>
+    </nav>
+
+    <!-- CONTENT SECTIONS -->
+    <main>
+      <!-- AFFIRMATIONS TAB -->
+      <section id="sec-affirmations" class="tab-content">
+        <div class="bg-emerald-card border border-[#d4af37]/30 rounded-2xl p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold gold-text">Daily Affirmation Reps (Target: 18/18)</h2>
+            <button onclick="resetAffirmations()" class="text-xs text-emerald-300 underline">Reset Daily Count</button>
+          </div>
+          <div class="w-full bg-[#031e16] rounded-full h-4 border border-[#d4af37]/30 mb-4 overflow-hidden">
+            <div id="affProgressBar" class="gold-gradient h-full w-0 transition-all duration-300"></div>
+          </div>
+          <p id="affCountText" class="text-sm gold-text font-bold">0 / 18 Completed Today</p>
+        </div>
+        <div id="affirmationList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- TASKS TAB -->
+      <section id="sec-tasks" class="tab-content hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+            <h3 class="text-lg font-bold gold-text mb-4">Spiritual</h3>
+            <div id="spiritual-tasks" class="space-y-2"></div>
+          </div>
+          <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+            <h3 class="text-lg font-bold gold-text mb-4">Personal</h3>
+            <div id="personal-tasks" class="space-y-2"></div>
+          </div>
+          <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+            <h3 class="text-lg font-bold gold-text mb-4">Career</h3>
+            <div id="career-tasks" class="space-y-2"></div>
+          </div>
+          <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+            <h3 class="text-lg font-bold gold-text mb-4">Academic</h3>
+            <div id="academic-tasks" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SPEECH TIMER TAB -->
+      <section id="sec-speech" class="tab-content hidden">
+        <div class="bg-emerald-card border border-[#d4af37]/30 rounded-2xl p-8 text-center max-w-xl mx-auto">
+          <h2 class="text-2xl font-bold gold-text mb-2">Speech Prompt & Timer</h2>
+          <p class="text-sm text-emerald-200/70 mb-6">Randomized Topics & Durations (1–10 mins)</p>
+          <div id="speechTopic" class="text-lg italic text-emerald-100 bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30 mb-6">Click Generate to get a topic</div>
+          <div id="speechTimeDisplay" class="text-5xl font-bold gold-text mb-6">00:00</div>
+          <div class="flex justify-center gap-4">
+            <button onclick="generateSpeechPrompt()" class="gold-gradient text-[#031e16] font-bold px-6 py-2 rounded-lg">New Topic</button>
+            <button onclick="toggleSpeechTimer()" id="speechTimerBtn" class="border border-[#d4af37] text-gold-400 px-6 py-2 rounded-lg">Start Timer</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SOCIAL MEDIA ENGINE TAB -->
+      <section id="sec-social" class="tab-content hidden">
+        <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+          <h2 class="text-xl font-bold gold-text mb-4">Multi-Brand Visual & Caption Prompt Generator</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <button onclick="genSocial('shafalie')" class="bg-[#031e16] border border-[#d4af37]/50 p-4 rounded-xl hover:border-[#d4af37] text-left">
+              <h4 class="font-bold gold-text">Shafalie's Fashions</h4>
+              <p class="text-xs text-emerald-200/60">FB & IG Visual Prompts</p>
+            </button>
+            <button onclick="genSocial('kelly')" class="bg-[#031e16] border border-[#d4af37]/50 p-4 rounded-xl hover:border-[#d4af37] text-left">
+              <h4 class="font-bold gold-text">Kelly's Tutors</h4>
+              <p class="text-xs text-emerald-200/60">FB & IG Educational Posts</p>
+            </button>
+            <button onclick="genSocial('linkedin')" class="bg-[#031e16] border border-[#d4af37]/50 p-4 rounded-xl hover:border-[#d4af37] text-left">
+              <h4 class="font-bold gold-text">LinkedIn AI Personal Brand</h4>
+              <p class="text-xs text-emerald-200/60">Data Analytics & AI Insights</p>
+            </button>
+          </div>
+          <div class="bg-[#031e16] border border-[#d4af37]/30 p-6 rounded-xl">
+            <h4 class="text-sm font-bold gold-text mb-2">Generated Output:</h4>
+            <div id="socialOutput" class="whitespace-pre-wrap text-sm text-emerald-100">Select a brand above to generate optimized captions and Midjourney / DALL-E visual prompts.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MANHWA VAULT TAB -->
+      <section id="sec-manhwa" class="tab-content hidden">
+        <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+          <h2 class="text-xl font-bold gold-text mb-4">Manhwa Tracking Vault</h2>
+          <div id="manhwaContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+      </section>
+
+      <!-- DIGITAL PRODUCTS TAB -->
+      <section id="sec-digital" class="tab-content hidden">
+        <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+          <h2 class="text-xl font-bold gold-text mb-4">Digital Products & AI Bots Revenue Log</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30">
+              <span class="text-xs text-emerald-200/60">Total Earnings</span>
+              <p id="totalRevenueDisplay" class="text-2xl font-bold gold-text">$0.00</p>
+            </div>
+          </div>
+          <div id="productLog" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- HEALTHCARE ROADMAP TAB -->
+      <section id="sec-healthcare" class="tab-content hidden">
+        <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl mb-6">
+          <h2 class="text-xl font-bold gold-text mb-2">4-Week Healthcare Analytics Fast-Track</h2>
+          <p class="text-sm text-emerald-200/70 mb-4">Structured roadmap for SQL, Power BI, Python, Claims Data, and EHR standards.</p>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30"><h4 class="font-bold gold-text text-sm">Week 1</h4><p class="text-xs text-emerald-200/70 mt-1">SQL & Claims Data (ICD-10, CPT, HIPAA)</p></div>
+            <div class="bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30"><h4 class="font-bold gold-text text-sm">Week 2</h4><p class="text-xs text-emerald-200/70 mt-1">Power BI & EHR Dashboards</p></div>
+            <div class="bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30"><h4 class="font-bold gold-text text-sm">Week 3</h4><p class="text-xs text-emerald-200/70 mt-1">Python for Clinical Analytics</p></div>
+            <div class="bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30"><h4 class="font-bold gold-text text-sm">Week 4</h4><p class="text-xs text-emerald-200/70 mt-1">Resume Optimization & Job Apps</p></div>
+          </div>
+        </div>
+        <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
+          <h3 class="text-lg font-bold gold-text mb-2">Interactive Resume Keyword Analyzer</h3>
+          <p class="text-xs text-emerald-200/70 mb-4">Paste your resume bullet points to verify essential healthcare domain keywords.</p>
+          <textarea id="resumeText" rows="5" class="w-full bg-[#031e16] border border-[#d4af37]/40 rounded-xl p-4 text-sm text-emerald-100 focus:outline-none mb-4" placeholder="Paste resume text here..."></textarea>
+          <button onclick="analyzeResume()" class="gold-gradient text-[#031e16] font-bold px-6 py-2 rounded-lg text-sm">Analyze Keywords</button>
+          <div id="resumeAnalysisResult" class="mt-4 text-sm"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    /* ===========================================================================
+       FIREBASE / API CONFIGURATION - HARD-WIRED SILENT SYNC
+       =========================================================================== */
+    const firebaseConfig = {
+       apiKey: "AIzaSyBSgebV9zbsqGOFl1y1o-f0LAAMwaJFIvw",
+  authDomain: "control-3ae29.firebaseapp.com",
+  databaseURL: "https://control-3ae29-default-rtdb.firebaseio.com",
+  projectId: "control-3ae29",
+  storageBucket: "control-3ae29.firebasestorage.app",
+  messagingSenderId: "42672048524",
+  appId: "1:42672048524:web:54350e3a81c1209ba3eea9"
+    };
+
+    const HARD_WIRED_SYNC_KEY = "EMERALD_COMMAND_CENTER_MAIN"; // Unified database channel
+    const CORRECT_PASSCODE = "1289";
+
+    let db = null;
+    let isConnected = false;
+
+    // Default Application State
+    let state = {
+      affirmations: [
+        { id: 1, text: "I am building sustainable wealth through high-value skills.", completed: false },
+        { id: 2, text: "My mind is clear, focused, and adaptable.", completed: false },
+        { id: 3, text: "I excel in Healthcare Analytics and data-driven decisions.", completed: false },
+        { id: 4, text: "I continuously create value through innovative AI products.", completed: false }
+      ],
+      tasks: {
+        spiritual: [{ id: 1, text: "Morning Meditation & Reflection", done: false }],
+        personal: [{ id: 1, text: "Review Weekly Goal Progress", done: false }],
+        career: [{ id: 1, text: "Practice Healthcare SQL Queries", done: false }],
+        academic: [{ id: 2, text: "Study Course Notes", done: false }]
+      },
+      manhwa: [
+        { id: 1, title: "Solo Leveling", status: "Reading", chapter: 179, note: "Peak fight scene" }
+      ],
+      digitalProducts: [
+        { id: 1, name: "Custom AI Bot Prompt Pack", sales: 12, price: 29.99 }
+      ]
+    };
+
+    // Initialize Database
+    try {
+      if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        isConnected = true;
+        
+        // Listen for silent updates from either device
+        db.ref('sync_data/' + HARD_WIRED_SYNC_KEY).on('value', (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            state = val;
+            renderAll();
+          }
+        });
+      }
+    } catch(e) {
+      console.warn("Firebase not configured. Running local state.");
+    }
+
+    function syncToCloud() {
+      if (isConnected && db) {
+        db.ref('sync_data/' + HARD_WIRED_SYNC_KEY).set(state);
+      }
+      renderAll();
+    }
+
+    // Security Unlock
+    function unlockApp() {
+      const input = document.getElementById('passcodeInput').value;
+      if (input === CORRECT_PASSCODE) {
+        document.getElementById('lockOverlay').classList.add('hidden');
+        document.getElementById('appWorkspace').classList.remove('hidden');
+        renderAll();
+      } else {
+        document.getElementById('lockError').classList.remove('hidden');
+      }
+    }
+
+    function lockApp() {
+      document.getElementById('lockOverlay').classList.remove('hidden');
+      document.getElementById('appWorkspace').classList.add('hidden');
+      document.getElementById('passcodeInput').value = '';
+    }
+
+    // Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-[#d4af37]', 'text-[#031e16]');
+        btn.classList.add('text-emerald-200/80');
+      });
+
+      document.getElementById('sec-' + tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + tabId);
+      activeBtn.classList.add('bg-[#d4af37]', 'text-[#031e16]');
+      activeBtn.classList.remove('text-emerald-200/80');
+    }
+
+    // Render Functions
+    function renderAll() {
+      renderAffirmations();
+      renderTasks();
+      renderManhwa();
+      renderDigital();
+    }
+
+    function renderAffirmations() {
+      const list = document.getElementById('affirmationList');
+      const completed = state.affirmations.filter(a => a.completed).length;
+      const pct = Math.min((completed / 18) * 100, 100);
+
+      document.getElementById('affProgressBar').style.width = pct + '%';
+      document.getElementById('affCountText').innerText = `${completed} / 18 Completed Today`;
+
+      list.innerHTML = state.affirmations.map(a => `
+        <div onclick="toggleAff(${a.id})" class="cursor-pointer p-4 rounded-xl border ${a.completed ? 'border-green-500/80 bg-green-950/30' : 'border-[#d4af37]/30 bg-[#031e16]'}">
+          <p class="text-sm ${a.completed ? 'line-through text-emerald-400/60' : 'text-emerald-100'}">${a.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function toggleAff(id) {
+      const aff = state.affirmations.find(a => a.id === id);
+      if (aff) {
+        aff.completed = !aff.completed;
+        syncToCloud();
+      }
+    }
+
+    function resetAffirmations() {
+      state.affirmations.forEach(a => a.completed = false);
+      syncToCloud();
+    }
+
+    function renderTasks() {
+      ['spiritual', 'personal', 'career', 'academic'].forEach(domain => {
+        const container = document.getElementById(domain + '-tasks');
+        container.innerHTML = state.tasks[domain].map(t => `
+          <div class="flex items-center gap-3 p-2 rounded-lg bg-[#031e16] border border-[#d4af37]/20">
+            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${domain}', ${t.id})" class="accent-[#d4af37]">
+            <span class="text-sm ${t.done ? 'line-through text-emerald-400/50' : 'text-emerald-100'}">${t.text}</span>
+          </div>
+        `).join('');
+      });
+    }
+
+    function toggleTask(domain, id) {
+      const t = state.tasks[domain].find(item => item.id === id);
+      if (t) {
+        t.done = !t.done;
+        syncToCloud();
+      }
+    }
+
+    // Speech Timer
+    let timerInterval = null;
+    let timerSeconds = 0;
+
+    function generateSpeechPrompt() {
+      const topics = [
+        "How Healthcare Analytics improves clinical patient outcomes",
+        "Strategic application of game theory in daily decision making",
+        "Building digital product micro-businesses using AI automation",
+        "The impact of FHIR and claims data integration in modern EHRs"
+      ];
+      const mins = Math.floor(Math.random() * 10) + 1;
+      document.getElementById('speechTopic').innerText = `"${topics[Math.floor(Math.random()*topics.length)]}" (${mins} min delivery)`;
+      timerSeconds = mins * 60;
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+      const s = (timerSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('speechTimeDisplay').innerText = `${m}:${s}`;
+    }
+
+    function toggleSpeechTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        document.getElementById('speechTimerBtn').innerText = "Start Timer";
+      } else {
+        if (timerSeconds <= 0) return;
+        document.getElementById('speechTimerBtn').innerText = "Pause";
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) {
+            timerSeconds--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            alert("Speech duration complete!");
+          }
+        }, 1000);
+      }
+    }
+
+    // Social Generator
+    function genSocial(brand) {
+      const outputs = {
+        shafalie: "Shafalie's Fashions IG Visual Prompt:\n'Luxury South Asian couture dress rendered in emerald green and gold embroidery, studio lighting, highly detailed 8k.'\n\nCaption: Elevate your wardrobe with timeless elegance.",
+        kelly: "Kelly's Tutors Post Prompt:\n'Clean graphic of study notes with gold highlights.'\n\nCaption: Master complex subjects with structured study frameworks.",
+        linkedin: "LinkedIn Personal Brand:\n'Data architecture workflow diagram for Healthcare Claims Data.'\n\nCaption: Leveraging SQL and Power BI to uncover insights in hospital patient outcomes."
+      };
+      document.getElementById('socialOutput').innerText = outputs[brand] || "";
+    }
+
+    // Manhwa
+    function renderManhwa() {
+      document.getElementById('manhwaContainer').innerHTML = state.manhwa.map(m => `
+        <div class="bg-[#031e16] border border-[#d4af37]/30 p-4 rounded-xl">
+          <h4 class="font-bold gold-text">${m.title}</h4>
+          <p class="text-xs text-emerald-200/70 mt-1">Status: ${m.status} | Ch. ${m.chapter}</p>
+          <p class="text-xs italic text-emerald-300 mt-2">"${m.note}"</p>
+        </div>
+      `).join('');
+    }
+
+    // Digital Products
+    function renderDigital() {
+      let total = 0;
+      document.getElementById('productLog').innerHTML = state.digitalProducts.map(p => {
+        const subtotal = p.sales * p.price;
+        total += subtotal;
+        return `
+          <div class="flex justify-between bg-[#031e16] border border-[#d4af37]/30 p-3 rounded-xl text-sm">
+            <span>${p.name} (${p.sales} sales)</span>
+            <span class="gold-text font-bold">$${subtotal.toFixed(2)}</span>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('totalRevenueDisplay').innerText = `$${total.toFixed(2)}`;
+    }
+
+    // Resume Keyword Scanner
+    function analyzeResume() {
+      const text = document.getElementById('resumeText').value.toLowerCase();
+      const keywords = ['sql', 'power bi', 'hipaa', 'ehr', 'claims data', 'python', 'tableau', 'icd-10'];
+      const found = keywords.filter(k => text.includes(k));
+      const score = Math.round((found.length / keywords.length) * 100);
+
+      document.getElementById('resumeAnalysisResult').innerHTML = `
+        <div class="p-4 rounded-xl bg-[#031e16] border border-[#d4af37]/30">
+          <p class="font-bold gold-text">Optimization Score: ${score}%</p>
+          <p class="text-xs text-emerald-200/70 mt-1">Found: ${found.join(', ') || 'None'}</p>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
