@@ -222,6 +222,52 @@
 
   <script>
     /* ===========================================================================
+   DYNAMIC PASSCODE (NO HARDCODED PASSWORD IN CODE)
+   =========================================================================== */
+
+function unlockApp() {
+  const input = document.getElementById('passcodeInput').value;
+  const savedPasscode = localStorage.getItem('emerald_cmd_passcode');
+
+  if (!savedPasscode) {
+    // First time setup: Set your password dynamically!
+    if (input.trim().length < 4) {
+      alert("Please enter a passcode of at least 4 digits to set up your lock.");
+      return;
+    }
+    localStorage.setItem('emerald_cmd_passcode', input);
+    alert("Passcode set successfully on this device!");
+    document.getElementById('lockOverlay').classList.add('hidden');
+    document.getElementById('appWorkspace').classList.remove('hidden');
+    renderAll();
+  } else {
+    // Standard verification
+    if (input === savedPasscode) {
+      document.getElementById('lockOverlay').classList.add('hidden');
+      document.getElementById('appWorkspace').classList.remove('hidden');
+      document.getElementById('lockError').classList.add('hidden');
+      renderAll();
+    } else {
+      document.getElementById('lockError').classList.remove('hidden');
+    }
+  }
+}
+
+function lockApp() {
+  document.getElementById('lockOverlay').classList.remove('hidden');
+  document.getElementById('appWorkspace').classList.add('hidden');
+  document.getElementById('passcodeInput').value = '';
+}
+
+// Update the lock screen subtitle dynamically based on setup status
+window.addEventListener('DOMContentLoaded', () => {
+  const savedPasscode = localStorage.getItem('emerald_cmd_passcode');
+  const subtitle = document.querySelector('#lockOverlay p');
+  if (!savedPasscode && subtitle) {
+    subtitle.innerText = "Create a new passcode to lock this device (First Time Setup)";
+  }
+});
+    /* ===========================================================================
        FIREBASE CONFIGURATION
        =========================================================================== */
     const firebaseConfig = {
