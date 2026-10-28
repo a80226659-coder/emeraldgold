@@ -26,7 +26,7 @@
       <div class="w-16 h-16 gold-gradient rounded-full mx-auto mb-4 flex items-center justify-center text-[#031e16] font-bold text-2xl">🔒</div>
       <h2 class="text-2xl font-bold gold-text mb-2">Access Command Center</h2>
       <p class="text-sm text-emerald-200/70 mb-6">Enter your security passcode to unlock</p>
-      <input type="password" id="passcodeInput" class="w-full bg-[#031e16] border border-[#d4af37]/50 rounded-lg px-4 py-3 text-center text-xl tracking-widest text-gold-400 focus:outline-none focus:border-[#d4af37] mb-4" placeholder="••••">
+      <input type="password" id="passcodeInput" class="w-full bg-[#031e16] border border-[#d4af37]/50 rounded-lg px-4 py-3 text-center text-xl tracking-widest text-gold-400 focus:outline-none focus:border-[#d4af37] mb-4" placeholder="••••" onkeydown="if(event.key==='Enter') unlockApp()">
       <button onclick="unlockApp()" class="w-full gold-gradient text-[#031e16] font-bold py-3 rounded-lg hover:opacity-90 transition">Unlock Workspace</button>
       <p id="lockError" class="text-red-400 text-sm mt-3 hidden">Invalid Passcode</p>
     </div>
@@ -60,13 +60,19 @@
       <section id="sec-affirmations" class="tab-content">
         <div class="bg-emerald-card border border-[#d4af37]/30 rounded-2xl p-6 mb-6">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold gold-text">Daily Affirmation Reps (Target: 18/18)</h2>
-            <button onclick="resetAffirmations()" class="text-xs text-emerald-300 underline">Reset Daily Count</button>
+            <h2 class="text-xl font-bold gold-text">Daily Affirmation Reps</h2>
+            <button onclick="resetAffirmations()" class="text-xs text-emerald-300 underline hover:text-gold-400">Reset Daily Count</button>
           </div>
           <div class="w-full bg-[#031e16] rounded-full h-4 border border-[#d4af37]/30 mb-4 overflow-hidden">
             <div id="affProgressBar" class="gold-gradient h-full w-0 transition-all duration-300"></div>
           </div>
-          <p id="affCountText" class="text-sm gold-text font-bold">0 / 18 Completed Today</p>
+          <p id="affCountText" class="text-sm gold-text font-bold mb-4">0 Completed Today</p>
+
+          <!-- ADD AFFIRMATION INPUT -->
+          <div class="flex gap-2">
+            <input type="text" id="newAffInput" placeholder="Add custom affirmation..." class="flex-1 bg-[#031e16] border border-[#d4af37]/40 rounded-lg px-4 py-2 text-sm text-emerald-100 focus:outline-none focus:border-[#d4af37]" onkeydown="if(event.key==='Enter') addAffirmation()">
+            <button onclick="addAffirmation()" class="gold-gradient text-[#031e16] font-bold px-4 py-2 rounded-lg text-sm hover:opacity-90">+ Add</button>
+          </div>
         </div>
         <div id="affirmationList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </section>
@@ -74,20 +80,43 @@
       <!-- TASKS TAB -->
       <section id="sec-tasks" class="tab-content hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Spiritual -->
           <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
             <h3 class="text-lg font-bold gold-text mb-4">Spiritual</h3>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="input-spiritual" placeholder="New spiritual task..." class="flex-1 bg-[#031e16] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100 focus:outline-none" onkeydown="if(event.key==='Enter') addTask('spiritual')">
+              <button onclick="addTask('spiritual')" class="gold-gradient text-[#031e16] font-bold px-3 py-1.5 rounded-lg text-xs">+ Add</button>
+            </div>
             <div id="spiritual-tasks" class="space-y-2"></div>
           </div>
+
+          <!-- Personal -->
           <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
             <h3 class="text-lg font-bold gold-text mb-4">Personal</h3>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="input-personal" placeholder="New personal task..." class="flex-1 bg-[#031e16] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100 focus:outline-none" onkeydown="if(event.key==='Enter') addTask('personal')">
+              <button onclick="addTask('personal')" class="gold-gradient text-[#031e16] font-bold px-3 py-1.5 rounded-lg text-xs">+ Add</button>
+            </div>
             <div id="personal-tasks" class="space-y-2"></div>
           </div>
+
+          <!-- Career -->
           <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
             <h3 class="text-lg font-bold gold-text mb-4">Career</h3>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="input-career" placeholder="New career task..." class="flex-1 bg-[#031e16] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100 focus:outline-none" onkeydown="if(event.key==='Enter') addTask('career')">
+              <button onclick="addTask('career')" class="gold-gradient text-[#031e16] font-bold px-3 py-1.5 rounded-lg text-xs">+ Add</button>
+            </div>
             <div id="career-tasks" class="space-y-2"></div>
           </div>
+
+          <!-- Academic -->
           <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
             <h3 class="text-lg font-bold gold-text mb-4">Academic</h3>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="input-academic" placeholder="New academic task..." class="flex-1 bg-[#031e16] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100 focus:outline-none" onkeydown="if(event.key==='Enter') addTask('academic')">
+              <button onclick="addTask('academic')" class="gold-gradient text-[#031e16] font-bold px-3 py-1.5 rounded-lg text-xs">+ Add</button>
+            </div>
             <div id="academic-tasks" class="space-y-2"></div>
           </div>
         </div>
@@ -135,7 +164,15 @@
       <!-- MANHWA VAULT TAB -->
       <section id="sec-manhwa" class="tab-content hidden">
         <div class="bg-emerald-card border border-[#d4af37]/30 p-6 rounded-2xl">
-          <h2 class="text-xl font-bold gold-text mb-4">Manhwa Tracking Vault</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold gold-text">Manhwa Tracking Vault</h2>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-6 bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30">
+            <input type="text" id="mTitle" placeholder="Manhwa Title" class="bg-[#02130e] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100">
+            <input type="text" id="mStatus" placeholder="Status (e.g. Reading)" class="bg-[#02130e] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100">
+            <input type="number" id="mChapter" placeholder="Chapter #" class="bg-[#02130e] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100">
+            <button onclick="addManhwa()" class="gold-gradient text-[#031e16] font-bold px-3 py-1.5 rounded-lg text-xs">+ Add Title</button>
+          </div>
           <div id="manhwaContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
       </section>
@@ -149,6 +186,12 @@
               <span class="text-xs text-emerald-200/60">Total Earnings</span>
               <p id="totalRevenueDisplay" class="text-2xl font-bold gold-text">$0.00</p>
             </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-6 bg-[#031e16] p-4 rounded-xl border border-[#d4af37]/30">
+            <input type="text" id="pName" placeholder="Product / Bot Name" class="bg-[#02130e] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100">
+            <input type="number" id="pSales" placeholder="Sales Count" class="bg-[#02130e] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100">
+            <input type="number" step="0.01" id="pPrice" placeholder="Unit Price ($)" class="bg-[#02130e] border border-[#d4af37]/40 rounded-lg px-3 py-1.5 text-xs text-emerald-100">
+            <button onclick="addDigitalProduct()" class="gold-gradient text-[#031e16] font-bold px-3 py-1.5 rounded-lg text-xs">+ Add Product</button>
           </div>
           <div id="productLog" class="space-y-3"></div>
         </div>
@@ -179,25 +222,25 @@
 
   <script>
     /* ===========================================================================
-       FIREBASE / API CONFIGURATION - HARD-WIRED SILENT SYNC
+       FIREBASE CONFIGURATION
        =========================================================================== */
     const firebaseConfig = {
-       apiKey: "AIzaSyBSgebV9zbsqGOFl1y1o-f0LAAMwaJFIvw",
-  authDomain: "control-3ae29.firebaseapp.com",
-  databaseURL: "https://control-3ae29-default-rtdb.firebaseio.com",
-  projectId: "control-3ae29",
-  storageBucket: "control-3ae29.firebasestorage.app",
-  messagingSenderId: "42672048524",
-  appId: "1:42672048524:web:54350e3a81c1209ba3eea9"
+      apiKey: "YOUR_API_KEY_HERE",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
-    const HARD_WIRED_SYNC_KEY = "EMERALD_COMMAND_CENTER_MAIN"; // Unified database channel
+    const HARD_WIRED_SYNC_KEY = "EMERALD_COMMAND_CENTER_MAIN";
     const CORRECT_PASSCODE = "1289";
 
     let db = null;
     let isConnected = false;
 
-    // Default Application State
+    // Initial State Structure
     let state = {
       affirmations: [
         { id: 1, text: "I am building sustainable wealth through high-value skills.", completed: false },
@@ -209,7 +252,7 @@
         spiritual: [{ id: 1, text: "Morning Meditation & Reflection", done: false }],
         personal: [{ id: 1, text: "Review Weekly Goal Progress", done: false }],
         career: [{ id: 1, text: "Practice Healthcare SQL Queries", done: false }],
-        academic: [{ id: 2, text: "Study Course Notes", done: false }]
+        academic: [{ id: 1, text: "Study Course Notes", done: false }]
       },
       manhwa: [
         { id: 1, title: "Solo Leveling", status: "Reading", chapter: 179, note: "Peak fight scene" }
@@ -219,24 +262,27 @@
       ]
     };
 
-    // Initialize Database
+    // Firebase Init & Cloud Sync Listener
     try {
       if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
         isConnected = true;
         
-        // Listen for silent updates from either device
         db.ref('sync_data/' + HARD_WIRED_SYNC_KEY).on('value', (snapshot) => {
           const val = snapshot.val();
           if (val) {
             state = val;
+            if(!state.tasks) state.tasks = { spiritual:[], personal:[], career:[], academic:[] };
+            if(!state.affirmations) state.affirmations = [];
+            if(!state.manhwa) state.manhwa = [];
+            if(!state.digitalProducts) state.digitalProducts = [];
             renderAll();
           }
         });
       }
     } catch(e) {
-      console.warn("Firebase not configured. Running local state.");
+      console.warn("Firebase not connected. Running locally.");
     }
 
     function syncToCloud() {
@@ -246,7 +292,7 @@
       renderAll();
     }
 
-    // Security Unlock
+    // Passcode Unlock
     function unlockApp() {
       const input = document.getElementById('passcodeInput').value;
       if (input === CORRECT_PASSCODE) {
@@ -264,7 +310,7 @@
       document.getElementById('passcodeInput').value = '';
     }
 
-    // Navigation
+    // Tab Switcher
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -278,7 +324,7 @@
       activeBtn.classList.remove('text-emerald-200/80');
     }
 
-    // Render Functions
+    // Render Master
     function renderAll() {
       renderAffirmations();
       renderTasks();
@@ -286,19 +332,34 @@
       renderDigital();
     }
 
+    /* --- AFFIRMATIONS LOGIC --- */
     function renderAffirmations() {
       const list = document.getElementById('affirmationList');
       const completed = state.affirmations.filter(a => a.completed).length;
-      const pct = Math.min((completed / 18) * 100, 100);
+      const total = state.affirmations.length;
+      const pct = total > 0 ? Math.min((completed / total) * 100, 100) : 0;
 
       document.getElementById('affProgressBar').style.width = pct + '%';
-      document.getElementById('affCountText').innerText = `${completed} / 18 Completed Today`;
+      document.getElementById('affCountText').innerText = `${completed} / ${total} Completed Today`;
 
       list.innerHTML = state.affirmations.map(a => `
-        <div onclick="toggleAff(${a.id})" class="cursor-pointer p-4 rounded-xl border ${a.completed ? 'border-green-500/80 bg-green-950/30' : 'border-[#d4af37]/30 bg-[#031e16]'}">
-          <p class="text-sm ${a.completed ? 'line-through text-emerald-400/60' : 'text-emerald-100'}">${a.text}</p>
+        <div class="flex items-center justify-between p-4 rounded-xl border ${a.completed ? 'border-green-500/80 bg-green-950/30' : 'border-[#d4af37]/30 bg-[#031e16]'}">
+          <div onclick="toggleAff(${a.id})" class="cursor-pointer flex-1 mr-2">
+            <p class="text-sm ${a.completed ? 'line-through text-emerald-400/60' : 'text-emerald-100'}">${a.text}</p>
+          </div>
+          <button onclick="deleteAffirmation(${a.id})" class="text-xs opacity-60 hover:opacity-100 transition">🗑️</button>
         </div>
       `).join('');
+    }
+
+    function addAffirmation() {
+      const input = document.getElementById('newAffInput');
+      const val = input.value.trim();
+      if (val) {
+        state.affirmations.push({ id: Date.now(), text: val, completed: false });
+        input.value = '';
+        syncToCloud();
+      }
     }
 
     function toggleAff(id) {
@@ -309,21 +370,42 @@
       }
     }
 
+    function deleteAffirmation(id) {
+      state.affirmations = state.affirmations.filter(a => a.id !== id);
+      syncToCloud();
+    }
+
     function resetAffirmations() {
       state.affirmations.forEach(a => a.completed = false);
       syncToCloud();
     }
 
+    /* --- TASKS LOGIC --- */
     function renderTasks() {
       ['spiritual', 'personal', 'career', 'academic'].forEach(domain => {
         const container = document.getElementById(domain + '-tasks');
-        container.innerHTML = state.tasks[domain].map(t => `
-          <div class="flex items-center gap-3 p-2 rounded-lg bg-[#031e16] border border-[#d4af37]/20">
-            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${domain}', ${t.id})" class="accent-[#d4af37]">
-            <span class="text-sm ${t.done ? 'line-through text-emerald-400/50' : 'text-emerald-100'}">${t.text}</span>
+        const items = state.tasks[domain] || [];
+        container.innerHTML = items.map(t => `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-[#031e16] border border-[#d4af37]/20">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${domain}', ${t.id})" class="accent-[#d4af37]">
+              <span class="text-sm ${t.done ? 'line-through text-emerald-400/50' : 'text-emerald-100'}">${t.text}</span>
+            </div>
+            <button onclick="deleteTask('${domain}', ${t.id})" class="text-xs opacity-60 hover:opacity-100">🗑️</button>
           </div>
         `).join('');
       });
+    }
+
+    function addTask(domain) {
+      const input = document.getElementById('input-' + domain);
+      const text = input.value.trim();
+      if (text) {
+        if (!state.tasks[domain]) state.tasks[domain] = [];
+        state.tasks[domain].push({ id: Date.now(), text: text, done: false });
+        input.value = '';
+        syncToCloud();
+      }
     }
 
     function toggleTask(domain, id) {
@@ -334,7 +416,12 @@
       }
     }
 
-    // Speech Timer
+    function deleteTask(domain, id) {
+      state.tasks[domain] = state.tasks[domain].filter(item => item.id !== id);
+      syncToCloud();
+    }
+
+    /* --- SPEECH TIMER --- */
     let timerInterval = null;
     let timerSeconds = 0;
 
@@ -378,7 +465,7 @@
       }
     }
 
-    // Social Generator
+    /* --- SOCIAL GENERATOR --- */
     function genSocial(brand) {
       const outputs = {
         shafalie: "Shafalie's Fashions IG Visual Prompt:\n'Luxury South Asian couture dress rendered in emerald green and gold embroidery, studio lighting, highly detailed 8k.'\n\nCaption: Elevate your wardrobe with timeless elegance.",
@@ -388,34 +475,75 @@
       document.getElementById('socialOutput').innerText = outputs[brand] || "";
     }
 
-    // Manhwa
+    /* --- MANHWA LOGIC --- */
     function renderManhwa() {
       document.getElementById('manhwaContainer').innerHTML = state.manhwa.map(m => `
-        <div class="bg-[#031e16] border border-[#d4af37]/30 p-4 rounded-xl">
-          <h4 class="font-bold gold-text">${m.title}</h4>
-          <p class="text-xs text-emerald-200/70 mt-1">Status: ${m.status} | Ch. ${m.chapter}</p>
-          <p class="text-xs italic text-emerald-300 mt-2">"${m.note}"</p>
+        <div class="bg-[#031e16] border border-[#d4af37]/30 p-4 rounded-xl flex justify-between items-start">
+          <div>
+            <h4 class="font-bold gold-text">${m.title}</h4>
+            <p class="text-xs text-emerald-200/70 mt-1">Status: ${m.status} | Ch. ${m.chapter}</p>
+          </div>
+          <button onclick="deleteManhwa(${m.id})" class="text-xs opacity-60 hover:opacity-100">🗑️</button>
         </div>
       `).join('');
     }
 
-    // Digital Products
+    function addManhwa() {
+      const title = document.getElementById('mTitle').value.trim();
+      const status = document.getElementById('mStatus').value.trim() || 'Reading';
+      const chapter = document.getElementById('mChapter').value || 1;
+      if (title) {
+        state.manhwa.push({ id: Date.now(), title, status, chapter });
+        document.getElementById('mTitle').value = '';
+        document.getElementById('mStatus').value = '';
+        document.getElementById('mChapter').value = '';
+        syncToCloud();
+      }
+    }
+
+    function deleteManhwa(id) {
+      state.manhwa = state.manhwa.filter(m => m.id !== id);
+      syncToCloud();
+    }
+
+    /* --- DIGITAL PRODUCTS LOGIC --- */
     function renderDigital() {
       let total = 0;
       document.getElementById('productLog').innerHTML = state.digitalProducts.map(p => {
         const subtotal = p.sales * p.price;
         total += subtotal;
         return `
-          <div class="flex justify-between bg-[#031e16] border border-[#d4af37]/30 p-3 rounded-xl text-sm">
+          <div class="flex justify-between items-center bg-[#031e16] border border-[#d4af37]/30 p-3 rounded-xl text-sm">
             <span>${p.name} (${p.sales} sales)</span>
-            <span class="gold-text font-bold">$${subtotal.toFixed(2)}</span>
+            <div class="flex items-center gap-3">
+              <span class="gold-text font-bold">$${subtotal.toFixed(2)}</span>
+              <button onclick="deleteDigitalProduct(${p.id})" class="text-xs opacity-60 hover:opacity-100">🗑️</button>
+            </div>
           </div>
         `;
       }).join('');
       document.getElementById('totalRevenueDisplay').innerText = `$${total.toFixed(2)}`;
     }
 
-    // Resume Keyword Scanner
+    function addDigitalProduct() {
+      const name = document.getElementById('pName').value.trim();
+      const sales = parseInt(document.getElementById('pSales').value) || 0;
+      const price = parseFloat(document.getElementById('pPrice').value) || 0;
+      if (name) {
+        state.digitalProducts.push({ id: Date.now(), name, sales, price });
+        document.getElementById('pName').value = '';
+        document.getElementById('pSales').value = '';
+        document.getElementById('pPrice').value = '';
+        syncToCloud();
+      }
+    }
+
+    function deleteDigitalProduct(id) {
+      state.digitalProducts = state.digitalProducts.filter(p => p.id !== id);
+      syncToCloud();
+    }
+
+    /* --- RESUME KEYWORD SCANNER --- */
     function analyzeResume() {
       const text = document.getElementById('resumeText').value.toLowerCase();
       const keywords = ['sql', 'power bi', 'hipaa', 'ehr', 'claims data', 'python', 'tableau', 'icd-10'];
